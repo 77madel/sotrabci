@@ -1,0 +1,238 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Utilisateur {
+  id         String   @id @default(cuid())
+  nom        String
+  email      String   @unique
+  role       Role     @default(RESPONSABLE)
+  motDePasse String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  projets    Projet[]
+  mouvements MouvementCaisse[]
+
+  @@map("utilisateurs")
+  Site Site[]
+}
+
+model CaisseGenerale {
+  id           String   @id @default(cuid())
+  soldeInitial Float
+  soldeActuel  Float
+  devise       String   @default("EUR")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  budgets    Budget[]
+  depenses   Depense[]
+  mouvements MouvementCaisse[]
+
+  @@map("caisse_generale")
+}
+
+model Site {
+  id              String   @id @default(cuid())
+  nom             String
+  adresse         String
+  responsableSite String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  projets         Projet[]
+  utilisateur     Utilisateur @relation(fields: [responsableSite], references: [id])
+
+  @@map("sites")
+  Besoin Besoin[]
+}
+
+model Projet {
+  id          String   @id @default(cuid())
+  nom         String
+  ministere   String
+  responsableId String
+  siteId      String?  // ✅ LIEN AVEC LE SITE
+  dateDebut   DateTime
+  dateFin     DateTime?
+  statut      StatutProjet @default(ACTIF)
+
+  // Relations
+  responsable Utilisateur @relation(fields: [responsableId], references: [id])
+  site        Site?       @relation(fields: [siteId], references: [id])
+  budgets     Budget[]
+  besoins     Besoin[]
+  depenses    Depense[]
+  affectations AffectationSalarie[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("projets")
+}
+
+model Budget {
+  id             String       @id @default(cuid())
+  montantAlloue  Float
+  montantDepense Float        @default(0)
+  montantRestant Float?  @default(0) // ✅ AJOUTER CE CHAMP OPTIONNEL
+  dateAllocation DateTime     @default(now())
+  statut         StatutBudget @default(ACTIF)
+
+  projetId String
+  caisseId String
+
+  projet   Projet         @relation(fields: [projetId], references: [id])
+  caisse   CaisseGenerale @relation(fields: [caisseId], references: [id])
+  depenses Depense[]
+
+  @@map("budgets")
+}
+
+model Besoin {
+  id            String   @id @default(cuid())
+  description   String
+  montantEstime Float
+  statut        StatutBesoin @default(EN_ATTENTE)
+  dateSoumission DateTime @default(now())
+  dateValidation DateTime?
+
+  // Relations
+  projetId      String
+  siteId        String?  // ✅ SITE AUTOMATIQUE
+  projet        Projet @relation(fields: [projetId], references: [id])
+  site          Site?   @relation(fields: [siteId], references: [id])
+  depenses      Depense[]
+
+  @@map("besoins")
+}
+
+
+model Depense {
+  id           String        @id @default(cuid())
+  montant      Float
+  typeDepense  TypeDepense
+  beneficiaire String
+  dateDepense  DateTime      @default(now())
+  justificatif String?
+  statut       StatutDepense @default(VALIDEE)
+
+  besoinId String?
+  projetId String
+  caisseId String
+
+  besoin Besoin?        @relation(fields: [besoinId], references: [id])
+  projet Projet         @relation(fields: [projetId], references: [id])
+  caisse CaisseGenerale @relation(fields: [caisseId], references: [id])
+  Budget Budget[]
+
+  @@map("depenses")
+}
+
+model MouvementCaisse {
+  id            String        @id @default(cuid())
+  typeMouvement TypeMouvement
+  montant       Float
+  reference     String?
+  description   String?
+  dateMouvement DateTime      @default(now())
+
+  caisseId      String
+  utilisateurId String
+
+  caisse      CaisseGenerale @relation(fields: [caisseId], references: [id])
+  utilisateur Utilisateur    @relation(fields: [utilisateurId], references: [id])
+
+  @@map("mouvements_caisse")
+}
+
+model Salarie {
+  id           String        @id @default(cuid())
+  nom          String
+  prenom       String
+  poste        String
+  salaireBase  Float
+  statut       StatutSalarie @default(ACTIF)
+  dateEmbauche DateTime
+
+  affectations AffectationSalarie[]
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  @@map("salaries")
+}
+
+model AffectationSalarie {
+  id        String @id @default(cuid())
+  salarieId String
+  projetId  String
+
+  salarie Salarie @relation(fields: [salarieId], references: [id])
+  projet  Projet  @relation(fields: [projetId], references: [id])
+
+  dateAffectation DateTime @default(now())
+
+  @@map("affectations_salaries")
+}
+
+enum Role {
+  ADMIN
+  DIRIGEANT
+  RESPONSABLE
+}
+
+enum StatutProjet {
+  ACTIF
+  TERMINE
+  SUSPENDU
+}
+
+enum StatutBudget {
+  ACTIF
+  EPUISE
+  CLOTURE
+}
+
+enum StatutBesoin {
+  EN_ATTENTE
+  VALIDE
+  REFUSE
+}
+
+enum StatutDepense {
+  VALIDEE
+  EN_ATTENTE
+  REFUSEE
+}
+
+enum TypeDepense {
+  SALAIRE
+  MATERIEL
+  SERVICE
+  FRAIS
+}
+
+enum TypeMouvement {
+  ALLOCATION
+  DEPENSE
+  APPROVISIONNEMENT
+}
+
+enum StatutSalarie {
+  ACTIF
+  INACTIF
+  CONGE
+}
