@@ -91,7 +91,7 @@
 const express = require('express');
 const router = express.Router();
 const depenseController = require('../controllers/DepenseController');
-const { authenticateToken, requireRole } = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 
 /**
  * @swagger
@@ -179,7 +179,7 @@ const { authenticateToken, requireRole } = require('../middleware/auth');
  *         description: Erreur serveur
  */
 router.post('/', 
-    //authenticateToken, 
+    authenticateToken(), 
     depenseController.createDepense);
 
 /**
@@ -267,7 +267,7 @@ router.post('/',
  *         description: Erreur serveur
  */
 router.get('/projet/:projetId', 
-    //authenticateToken, 
+    authenticateToken(), 
     depenseController.getDepensesByProjet);
 
 /**
@@ -385,7 +385,7 @@ router.get('/projet/:projetId',
  *         description: Erreur lors du calcul des statistiques
  */
 router.get('/statistiques', 
-    //authenticateToken, 
+    authenticateToken(), 
     depenseController.getStatistiques);
 
 /**

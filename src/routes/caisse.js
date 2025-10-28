@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const caisseController = require('../controllers/CaisseController');
-const { authenticateToken, requireRole } = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 
 /**
  * @swagger
@@ -127,7 +127,7 @@ const { authenticateToken, requireRole } = require('../middleware/auth');
  *         description: Erreur serveur
  */
 router.get('/solde',
-    //authenticateToken,
+    authenticateToken(),
     caisseController.getSolde);
 
 /**
@@ -167,8 +167,7 @@ router.get('/solde',
  *         description: Erreur serveur
  */
 router.post('/approvisionner',
-    //authenticateToken,
-    //requireRole(['ADMIN', 'DIRIGEANT']),
+    authenticateToken(),
     caisseController.approvisionner);
 
 /**
@@ -215,8 +214,7 @@ router.post('/approvisionner',
  *         description: Erreur serveur
  */
 router.post('/allouer-budget',
-    //authenticateToken,
-    //requireRole(['ADMIN', 'DIRIGEANT']),
+    authenticateToken(),
     caisseController.allouerBudget);
 
 /**
@@ -293,7 +291,7 @@ router.post('/allouer-budget',
  *         description: Erreur serveur
  */
 router.get('/mouvements',
-    //authenticateToken,
+    authenticateToken(),
     caisseController.getMouvements);
 
 /**
@@ -361,8 +359,7 @@ router.get('/mouvements',
  *         description: Erreur serveur
  */
 router.get('/rapport-financier',
-    //authenticateToken,
-    //requireRole(['ADMIN', 'DIRIGEANT']),
+    authenticateToken(),
     caisseController.getRapportFinancier);
 
 /**
@@ -402,8 +399,7 @@ router.get('/rapport-financier',
  *         description: Erreur serveur
  */
 router.get('/alertes',
-    //authenticateToken,
-    //requireRole(['ADMIN', 'DIRIGEANT']),
+    authenticateToken(),
     caisseController.getAlertes);
 
 module.exports = router;
