@@ -401,8 +401,13 @@ async function main() {
                 createdProjets[projet.nom] = projet;
                 console.log(`✅ Projet "${projetData.nom}" créé avec budget de ${montantAlloue} €`);
             } else {
-                createdProjets[projetData.nom] = existingProjet;
-                console.log(`ℹ️ Projet "${projetData.nom}" existe déjà`);
+                // ✅ Mettre à jour le siteId si le projet existe déjà
+                const updatedProjet = await prisma.projet.update({
+                    where: { id: existingProjet.id },
+                    data: { siteId: projetData.siteId }
+                });
+                createdProjets[projetData.nom] = updatedProjet;
+                console.log(`✅ Projet "${projetData.nom}" mis à jour avec le site`);
             }
         }
 

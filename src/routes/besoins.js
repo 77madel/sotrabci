@@ -266,7 +266,7 @@ const { authenticateToken, requireRole } = require('../middleware/auth');
  *         description: Non authentifié
  */
 router.post('/',
-    // authenticateToken,
+    authenticateToken(),
     besoinController.createBesoin);
 
 /**
@@ -306,7 +306,7 @@ router.post('/',
  *         description: Erreur serveur
  */
 router.get('/projet/:projetId',
-    // authenticateToken,
+    authenticateToken(),
     besoinController.getBesoinsByProjet);
 
 /**
@@ -436,7 +436,7 @@ router.get('/en-attente',
  *         description: Erreur serveur
  */
 router.get('/:id',
-    // authenticateToken,
+    authenticateToken(),
     besoinController.getBesoinById);
 
 /**
