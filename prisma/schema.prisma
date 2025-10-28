@@ -25,8 +25,10 @@ model Utilisateur {
   projets    Projet[]
   mouvements MouvementCaisse[]
 
+  // Relations
+  sites      Site[]
+
   @@map("utilisateurs")
-  Site Site[]
 }
 
 model CaisseGenerale {
@@ -133,11 +135,12 @@ model Depense {
   besoinId String?
   projetId String
   caisseId String
+  budgetId String?
 
   besoin Besoin?        @relation(fields: [besoinId], references: [id])
   projet Projet         @relation(fields: [projetId], references: [id])
   caisse CaisseGenerale @relation(fields: [caisseId], references: [id])
-  Budget Budget[]
+  budget Budget?        @relation(fields: [budgetId], references: [id])
 
   @@map("depenses")
 }

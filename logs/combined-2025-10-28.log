@@ -1,0 +1,5 @@
+[2025-10-28 10:36:15] WARN: Tentative d'accès sans token {
+  "service": "sotrab-ci-api",
+  "ip": "::1",
+  "path": "/"
+}

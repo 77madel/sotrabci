@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const prisma = require('../config/database');
+const jwtConfig = require('../config/jwt');
 
 class AuthService {
     async register(userData) {
@@ -45,9 +46,9 @@ class AuthService {
         }
 
         const token = jwt.sign(
-            { userId: user.id, email: user.email, role: user.role },
-            process.env.JWT_SECRET,
-            { expiresIn: process.env.JWT_EXPIRES_IN }
+            { id: user.id, email: user.email, role: user.role, nom: user.nom },
+            jwtConfig.secret,
+            { expiresIn: jwtConfig.expiresIn }
         );
 
         return {

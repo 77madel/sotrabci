@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/AuthController');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken, authLimiter } = require('../middleware/auth');
 
 /**
  * @swagger
@@ -68,7 +68,7 @@ const { authenticateToken } = require('../middleware/auth');
  *             schema:
  *               $ref: '#/components/schemas/AuthResponse'
  */
-router.post('/register', authController.register);
+router.post('/register', authLimiter, authController.register);
 
 /**
  * @swagger
@@ -98,7 +98,7 @@ router.post('/register', authController.register);
  *             schema:
  *               $ref: '#/components/schemas/AuthResponse'
  */
-router.post('/login', authController.login);
+router.post('/login', authLimiter, authController.login);
 
 /**
  * @swagger
@@ -122,7 +122,7 @@ router.post('/login', authController.login);
  *                   $ref: '#/components/schemas/User'
  */
 router.get('/profile', 
-    // authenticateToken, 
+    authenticateToken(), 
     authController.getProfile);
 
 module.exports = router;

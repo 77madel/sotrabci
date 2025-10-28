@@ -290,16 +290,123 @@ module.exports = router;*/
 const express = require('express');
 const router = express.Router();
 const projetController = require('../controllers/ProjetController');
-const { authenticateToken, requireRole } = require('../middleware/auth'); // ✅ PLUS BESOIN DE requireRole
+const { authenticateToken } = require('../middleware/auth');
+
+    /**
+     * @swagger
+     * tags:
+     *   - name: Projets
+     *     description: Gestion des projets
+     */
+
+    /**
+     * @swagger
+     * components:
+     *   schemas:
+     *     Projet:
+     *       type: object
+     *       properties:
+     *         id:
+     *           type: string
+     *           description: Identifiant du projet
+     *         nom:
+     *           type: string
+     *           description: Nom du projet
+     *           example: Modernisation Infrastructure
+     *         ministere:
+     *           type: string
+     *           description: Ministère responsable
+     *           example: Intérieur
+     *         responsableId:
+     *           type: string
+     *           description: ID du responsable du projet
+     *         siteId:
+     *           type: string
+     *           nullable: true
+     *           description: ID du site associé (optionnel)
+     *         dateDebut:
+     *           type: string
+     *           format: date-time
+     *           description: Date de début du projet
+     *           example: 2025-01-01T00:00:00.000Z
+     *         dateFin:
+     *           type: string
+     *           format: date-time
+     *           nullable: true
+     *           description: Date de fin du projet (optionnel)
+     *         statut:
+     *           type: string
+     *           enum: [ACTIF, TERMINE, SUSPENDU]
+     *           description: Statut du projet
+     *         createdAt:
+     *           type: string
+     *           format: date-time
+     *         updatedAt:
+     *           type: string
+     *           format: date-time
+     *     ProjetInput:
+     *       type: object
+     *       required: [nom, ministere, dateDebut]
+     *       properties:
+     *         nom:
+     *           type: string
+     *           example: Nouveau Projet
+     *         ministere:
+     *           type: string
+     *           example: Éducation
+     *         dateDebut:
+     *           type: string
+     *           format: date-time
+     *           example: 2025-01-01T00:00:00.000Z
+     *         dateFin:
+     *           type: string
+     *           format: date-time
+     *           example: 2025-12-31T00:00:00.000Z
+     *         siteId:
+     *           type: string
+     *           description: ID du site (optionnel)
+     */
 
     /**
      * @swagger
      * /api/projets:
      *   post:
      *     summary: Créer un nouveau projet (Responsable, Admin, Dirigeant)
+     *     tags: [Projets]
+     *     security:
+     *       - bearerAuth: []
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             required: [nom, ministere, dateDebut]
+     *             properties:
+     *               nom:
+     *                 type: string
+     *                 example: Projet X
+     *               ministere:
+     *                 type: string
+     *                 example: Intérieur
+     *               dateDebut:
+     *                 type: string
+     *                 format: date-time
+     *                 example: 2025-01-01T00:00:00.000Z
+     *               dateFin:
+     *                 type: string
+     *                 format: date-time
+     *                 example: 2025-12-31T00:00:00.000Z
+     *               siteId:
+     *                 type: string
+     *                 description: ID du site (optionnel)
+     *
+     *     responses:
+     *       201:
+     *         description: Projet créé avec succès
      */
     router.post('/', 
-        // authenticateToken, 
+        authenticateToken(), 
         projetController.createProjet);
 
     /**
@@ -307,39 +414,72 @@ const { authenticateToken, requireRole } = require('../middleware/auth'); // ✅
      * /api/projets:
      *   get:
      *     summary: Récupérer les projets selon les permissions
+     *     tags: [Projets]
+     *     security:
+     *       - bearerAuth: []
+     *     responses:
+     *       200:
+     *         description: Liste des projets
      */
     router.get('/', 
-        // authenticateToken,
-         projetController.getProjets);
+        authenticateToken(),
+        projetController.getProjets);
 
     /**
      * @swagger
-     * /api/projets/:id:
+     * /api/projets/{id}:
      *   get:
      *     summary: Récupérer un projet avec vérification des permissions
+     *     tags: [Projets]
+     *     security:
+     *       - bearerAuth: []
+     *     parameters:
+     *       - in: path
+     *         name: id
+     *         required: true
+     *         schema:
+     *           type: string
      */
     router.get('/:id', 
-        //authenticateToken, 
+        authenticateToken(), 
         projetController.getProjetById);
 
     /**
      * @swagger
-     * /api/projets/:id:
+     * /api/projets/{id}:
      *   put:
      *     summary: Modifier un projet avec vérification des permissions
+     *     tags: [Projets]
+     *     security:
+     *       - bearerAuth: []
+     *     parameters:
+     *       - in: path
+     *         name: id
+     *         required: true
+     *         schema:
+     *           type: string
      */
     router.put('/:id', 
-        //authenticateToken,
-         projetController.updateProjet);
+        authenticateToken(),
+        projetController.updateProjet);
 
     /**
      * @swagger
-     * /api/projets/:id/permissions:
+     * /api/projets/{id}/permissions:
      *   get:
      *     summary: Vérifier les permissions sur un projet
+     *     tags: [Projets]
+     *     security:
+     *       - bearerAuth: []
+     *     parameters:
+     *       - in: path
+     *         name: id
+     *         required: true
+     *         schema:
+     *           type: string
      */
     router.get('/:id/permissions', 
-        //authenticateToken, 
+        authenticateToken(), 
         projetController.checkPermissions);
 
     /**
@@ -368,7 +508,7 @@ const { authenticateToken, requireRole } = require('../middleware/auth'); // ✅
     *         description: Erreur serveur
     */
     router.get('/responsable/:responsableId', 
-       // authenticateToken, 
+        authenticateToken(), 
         projetController.getProjetsByResponsable);
 
     /**
@@ -399,8 +539,7 @@ const { authenticateToken, requireRole } = require('../middleware/auth'); // ✅
     *         description: Erreur serveur
     */
     router.delete('/:id', 
-        //authenticateToken, 
-        //requireRole(['ADMIN', 'DIRIGEANT']),
-         projetController.deleteProjet);
+        authenticateToken(), 
+        projetController.deleteProjet);
 
 module.exports = router;

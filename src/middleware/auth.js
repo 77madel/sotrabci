@@ -40,42 +40,23 @@
 
 const jwt = require('jsonwebtoken');
 const logger = require('../config/logger');
+const jwtConfig = require('../config/jwt');
 
-// Permissions par rôle (RBAC)
+// Permissions par rôle (alignées avec Prisma: ADMIN, DIRIGEANT, RESPONSABLE)
 const rolePermissions = {
-    DIRIGEANT: ['*'], // Toutes les permissions
-    RESPONSABLE_MINISTERE: [
+    DIRIGEANT: ['*'],
+    ADMIN: ['*'],
+    RESPONSABLE: [
         'view:projets',
         'create:projets',
-        'edit:projets',
-        'view:stocks',
-        'create:demandes',
-        'view:demandes',
-        'validate:demandes',
-        'view:utilisateurs',
-        'view:rapports'
-    ],
-    ASSISTANT_ADMIN: [
-        'view:projets',
-        'create:demandes',
-        'view:demandes',
-        'view:stocks',
-        'create:stocks',
-        'view:utilisateurs'
-    ],
-    COMPTABLE: [
-        'view:projets',
-        'view:depenses',
-        'create:depenses',
-        'view:rapports_financiers',
-        'export:rapports'
+        'edit:projets'
     ]
 };
 
 /**
  * Middleware d'authentification JWT
  */
-const authMiddleware = (requiredRoles = []) => {
+const authenticateToken = (requiredRoles = []) => {
     return (req, res, next) => {
         try {
             // Extraire le token du header Authorization
@@ -93,10 +74,10 @@ const authMiddleware = (requiredRoles = []) => {
             }
 
             // Vérifier le token
-            const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
-            
+            const decoded = jwt.verify(token, jwtConfig.secret);
+
             // Attacher l'utilisateur à la requête
-            req.utilisateur = decoded;
+            req.user = decoded;
 
             // Vérifier les rôles requis
             if (requiredRoles.length > 0) {
@@ -156,7 +137,7 @@ const authMiddleware = (requiredRoles = []) => {
  */
 const checkPermission = (requiredPermission) => {
     return (req, res, next) => {
-        const userRole = req.utilisateur?.role;
+        const userRole = req.user?.role;
 
         if (!userRole) {
             return res.status(401).json({
@@ -173,7 +154,7 @@ const checkPermission = (requiredPermission) => {
 
         if (!hasPermission) {
             logger.warn('Accès refusé - permission insuffisante', {
-                userId: req.utilisateur.id,
+                userId: req.user.id,
                 role: userRole,
                 requiredPermission
             });
@@ -194,8 +175,8 @@ const checkResourceOwnership = async (getResourceOwner) => {
     return async (req, res, next) => {
         try {
             const resourceId = req.params.id;
-            const userId = req.utilisateur.id;
-            const userRole = req.utilisateur.role;
+            const userId = req.user.id;
+            const userRole = req.user.role;
 
             // Les DIRIGEANT peuvent accéder à toutes les ressources
             if (userRole === 'DIRIGEANT') {
@@ -231,7 +212,7 @@ const checkResourceOwnership = async (getResourceOwner) => {
 /**
  * Générer un JWT
  */
-const generateToken = (utilisateur, expiresIn = '24h') => {
+const generateToken = (utilisateur, expiresIn = jwtConfig.expiresIn || '24h') => {
     return jwt.sign(
         {
             id: utilisateur.id,
@@ -241,7 +222,7 @@ const generateToken = (utilisateur, expiresIn = '24h') => {
             nom: utilisateur.nom,
             prenom: utilisateur.prenom
         },
-        process.env.JWT_SECRET || 'your-secret-key',
+        jwtConfig.secret,
         { expiresIn }
     );
 };
@@ -277,7 +258,7 @@ const authLimiter = createRateLimiter(15 * 60 * 1000, 5, 'Trop de tentatives de 
 const createLimiter = createRateLimiter(60 * 60 * 1000, 50); // 50 créations par heure
 
 module.exports = {
-    authMiddleware,
+    authenticateToken,
     checkPermission,
     checkResourceOwnership,
     generateToken,
