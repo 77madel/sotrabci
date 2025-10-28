@@ -200,6 +200,17 @@ const router = express.Router();
 const besoinController = require('../controllers/BesoinController');
 const { authenticateToken, requireRole } = require('../middleware/auth');
 
+// MIDDLEWARE TEMPORAIRE
+// const authenticateToken = (req, res, next) => {
+//     console.log('Middleware auth temporaire appelé');
+//     // Simuler un user pour les tests
+//     req.user = { id: 'user-temporaire', role: 'RESPONSABLE' };
+//     next();
+// };
+
+// Utilisez le middleware temporaire
+//router.post('/', authenticateToken, besoinController.createBesoin);
+
 /**
  * @swagger
  * tags:
